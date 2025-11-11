@@ -10,6 +10,12 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>Golf Ball Collector</title>
+    
+    <!-- Google Places API - Replace with your own key -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIdRy2BWkjJ3TEh-L72X3Tw2pLpGYKpho&libraries=places" async defer></script>
+    
+    <!-- Google Places API - Demo Key (Limited Usage) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=places&callback=initAutocomplete" async defer></script>
     <style>
         * {
             margin: 0;
@@ -184,6 +190,38 @@
             border-color: #2e7d32;
         }
 
+        /* Google Places Autocomplete styling */
+        .pac-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            border-radius: 8px;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: none;
+        }
+
+        .pac-item {
+            padding: 10px 12px;
+            border-top: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .pac-item:first-child {
+            border-top: none;
+        }
+
+        .pac-item:hover {
+            background: #f5f5f5;
+        }
+
+        .pac-icon {
+            display: none;
+        }
+
+        .pac-item-query {
+            font-size: 15px;
+            color: #333;
+        }
+
         .login-btn {
             width: 100%;
             padding: 14px;
@@ -292,38 +330,39 @@
 
         .ball-actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid #f0f0f0;
         }
 
         .btn-edit, .btn-delete {
             flex: 1;
-            padding: 8px;
-            border: none;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e0e0e0;
             border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .btn-edit {
-            background: #e3f2fd;
-            color: #1976d2;
+        .btn-edit:hover {
+            background: #fafafa;
+            border-color: #ccc;
+            color: #333;
         }
 
-        .btn-edit:active {
-            background: #bbdefb;
+        .btn-delete:hover {
+            background: #fafafa;
+            border-color: #ccc;
+            color: #333;
         }
 
-        .btn-delete {
-            background: #ffebee;
-            color: #c62828;
-        }
-
-        .btn-delete:active {
-            background: #ffcdd2;
+        .btn-edit:active, .btn-delete:active {
+            transform: scale(0.98);
         }
 
         .ball-course {
@@ -504,6 +543,59 @@
         .btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        /* Autocomplete dropdown styling */
+        .autocomplete-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f5f5f5;
+            transition: background 0.15s;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: #fafafa;
+        }
+
+        .autocomplete-item-main {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .autocomplete-item-secondary {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .autocomplete-no-results {
+            padding: 12px 16px;
+            color: #999;
+            font-size: 13px;
+            text-align: center;
         }
 
         .empty-state {
@@ -1147,8 +1239,8 @@
                         ${ball.date_played ? `<div class="ball-date">🗓️ ${formatDate(ball.date_played)}</div>` : ''}
                         ${ball.notes ? `<div class="ball-notes">${ball.notes}</div>` : ''}
                         <div class="ball-actions">
-                            <button class="btn-edit" onclick="editBall('${ball.id}')">✏️ Edit</button>
-                            <button class="btn-delete" onclick="confirmDelete('${ball.id}', '${ball.photo_url || ''}')">🗑️ Delete</button>
+                            <button class="btn-edit" onclick="editBall('${ball.id}')">Edit</button>
+                            <button class="btn-delete" onclick="confirmDelete('${ball.id}', '${ball.photo_url || ''}')">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -1217,6 +1309,181 @@
                 day: 'numeric' 
             });
         }
+
+        // ============================================
+        // GOOGLE PLACES AUTOCOMPLETE (GOLF-ONLY)
+        // ============================================
+        
+        let autocompleteService = null;
+        let placesService = null;
+        let autocompleteDropdown = null;
+        let debounceTimer = null;
+
+        window.initAutocomplete = function() {
+            console.log('Google Places API loaded');
+        };
+
+        function setupAutocomplete() {
+            const courseNameInput = document.getElementById('courseName');
+            
+            if (!window.google || !window.google.maps || !window.google.maps.places) {
+                console.log('Google Places not available yet - will work without autocomplete');
+                return;
+            }
+
+            try {
+                // Create a dummy div for PlacesService (required by API)
+                const dummyDiv = document.createElement('div');
+                
+                autocompleteService = new google.maps.places.AutocompleteService();
+                placesService = new google.maps.places.PlacesService(dummyDiv);
+                
+                // Create custom dropdown
+                autocompleteDropdown = document.createElement('div');
+                autocompleteDropdown.className = 'autocomplete-dropdown';
+                courseNameInput.parentElement.style.position = 'relative';
+                courseNameInput.parentElement.appendChild(autocompleteDropdown);
+
+                // Listen to input
+                courseNameInput.addEventListener('input', (e) => {
+                    const value = e.target.value.trim();
+                    
+                    clearTimeout(debounceTimer);
+                    
+                    if (value.length < 2) {
+                        autocompleteDropdown.classList.remove('show');
+                        return;
+                    }
+                    
+                    // Debounce search
+                    debounceTimer = setTimeout(() => {
+                        searchGolfPlaces(value);
+                    }, 300);
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!courseNameInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+                        autocompleteDropdown.classList.remove('show');
+                    }
+                });
+
+                console.log('Golf-only autocomplete initialized successfully');
+            } catch (error) {
+                console.error('Error initializing autocomplete:', error);
+            }
+        }
+
+        function searchGolfPlaces(query) {
+            // Add "golf" to search if not already present
+            const searchQuery = query.toLowerCase().includes('golf') ? query : query + ' golf';
+            
+            const request = {
+                input: searchQuery,
+                types: ['establishment']
+            };
+
+            autocompleteService.getPlacePredictions(request, (predictions, status) => {
+                if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+                    autocompleteDropdown.classList.remove('show');
+                    return;
+                }
+
+                // Filter to only golf-related results
+                const golfPredictions = predictions.filter(prediction => {
+                    const description = prediction.description.toLowerCase();
+                    return description.includes('golf') || 
+                           description.includes('country club') ||
+                           description.includes('links');
+                });
+
+                if (golfPredictions.length === 0) {
+                    autocompleteDropdown.innerHTML = `
+                        <div class="autocomplete-no-results">
+                            No golf courses found
+                        </div>
+                    `;
+                    autocompleteDropdown.classList.add('show');
+                    return;
+                }
+
+                // Display filtered results
+                autocompleteDropdown.innerHTML = golfPredictions.map(prediction => `
+                    <div class="autocomplete-item" data-place-id="${prediction.place_id}">
+                        <div class="autocomplete-item-main">
+                            ${prediction.structured_formatting.main_text}
+                        </div>
+                        <div class="autocomplete-item-secondary">
+                            ${prediction.structured_formatting.secondary_text || ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click handlers
+                autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selectPlace(item.dataset.placeId);
+                    });
+                });
+
+                autocompleteDropdown.classList.add('show');
+            });
+        }
+
+        function selectPlace(placeId) {
+            const request = {
+                placeId: placeId,
+                fields: ['name', 'formatted_address', 'address_components', 'geometry']
+            };
+
+            placesService.getDetails(request, (place, status) => {
+                if (status !== google.maps.places.PlacesServiceStatus.OK) {
+                    return;
+                }
+
+                // Update course name
+                document.getElementById('courseName').value = place.name;
+                autocompleteDropdown.classList.remove('show');
+
+                // Extract location details
+                let city = '';
+                let state = '';
+                let country = '';
+                
+                if (place.address_components) {
+                    place.address_components.forEach(component => {
+                        if (component.types.includes('locality')) {
+                            city = component.long_name;
+                        }
+                        if (component.types.includes('administrative_area_level_1')) {
+                            state = component.short_name;
+                        }
+                        if (component.types.includes('country')) {
+                            country = component.long_name;
+                        }
+                    });
+                }
+
+                // Auto-fill location field
+                const locationField = document.getElementById('location');
+                if (city && state && country) {
+                    locationField.value = `${city}, ${state}, ${country}`;
+                } else if (city && country) {
+                    locationField.value = `${city}, ${country}`;
+                } else if (place.formatted_address) {
+                    locationField.value = place.formatted_address;
+                }
+            });
+        }
+
+        // Try to setup autocomplete when modal opens
+        addBtn.addEventListener('click', () => {
+            setTimeout(() => {
+                if (!autocompleteService) {
+                    setupAutocomplete();
+                }
+            }, 100);
+        });
 
         // ============================================
         // INITIALIZE
