@@ -290,6 +290,42 @@
             padding: 15px;
         }
 
+        .ball-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-edit, .btn-delete {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-edit {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .btn-edit:active {
+            background: #bbdefb;
+        }
+
+        .btn-delete {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .btn-delete:active {
+            background: #ffcdd2;
+        }
+
         .ball-course {
             font-size: 18px;
             font-weight: 600;
@@ -573,7 +609,7 @@
     <div class="modal" id="addModal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">Add Golf Ball</div>
+                <div class="modal-title" id="modalTitle">Add Golf Ball</div>
                 <button class="close-btn" id="closeBtn">&times;</button>
             </div>
 
@@ -633,6 +669,7 @@
         let currentPhoto = null;
         let stream = null;
         let isSignUp = false;
+        let editingBallId = null; // Track which ball is being edited
 
         // DOM elements
         const loginScreen = document.getElementById('loginScreen');
@@ -650,6 +687,7 @@
         
         const addBtn = document.getElementById('addBtn');
         const modal = document.getElementById('addModal');
+        const modalTitle = document.getElementById('modalTitle');
         const closeBtn = document.getElementById('closeBtn');
         const cameraBtn = document.getElementById('cameraBtn');
         const uploadBtn = document.getElementById('uploadBtn');
@@ -829,6 +867,57 @@
             }
         }
 
+        async function updateGolfBall(id, ballData) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('golf_balls')
+                    .update(ballData)
+                    .eq('id', id)
+                    .select();
+                
+                if (error) throw error;
+                
+                // Update local array
+                const index = golfBalls.findIndex(b => b.id === id);
+                if (index !== -1) {
+                    golfBalls[index] = data[0];
+                }
+                renderCollection();
+                return data[0];
+            } catch (error) {
+                console.error('Error updating golf ball:', error);
+                throw error;
+            }
+        }
+
+        async function deleteGolfBall(id, photoUrl) {
+            try {
+                // Delete photo from storage if exists
+                if (photoUrl) {
+                    const pathParts = photoUrl.split('/');
+                    const fileName = pathParts.slice(-2).join('/'); // user_id/filename.jpg
+                    await supabaseClient.storage
+                        .from('golf-ball-photos')
+                        .remove([fileName]);
+                }
+
+                // Delete from database
+                const { error } = await supabaseClient
+                    .from('golf_balls')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                // Update local array
+                golfBalls = golfBalls.filter(b => b.id !== id);
+                renderCollection();
+            } catch (error) {
+                console.error('Error deleting golf ball:', error);
+                throw error;
+            }
+        }
+
         async function uploadPhoto(file) {
             try {
                 // Handle both File objects (from file input) and Blob objects (from camera)
@@ -865,6 +954,8 @@
         // ============================================
 
         addBtn.addEventListener('click', () => {
+            editingBallId = null;
+            modalTitle.textContent = 'Add Golf Ball';
             modal.classList.add('active');
             resetForm();
         });
@@ -967,18 +1058,21 @@
             }
 
             saveBtn.disabled = true;
-            saveBtn.textContent = 'Saving...';
+            saveBtn.textContent = editingBallId ? 'Updating...' : 'Saving...';
 
             try {
                 let photoUrl = null;
                 
+                // Only upload new photo if one was selected
                 if (currentPhoto) {
-                    // Upload photo first
                     photoUrl = await uploadPhoto(currentPhoto);
+                } else if (editingBallId) {
+                    // Keep existing photo if editing and no new photo selected
+                    const existingBall = golfBalls.find(b => b.id === editingBallId);
+                    photoUrl = existingBall?.photo_url || null;
                 }
 
                 const ballData = {
-                    user_id: currentUser.id,
                     course_name: courseName,
                     location: document.getElementById('location').value.trim() || null,
                     date_played: document.getElementById('datePlayed').value || null,
@@ -986,7 +1080,15 @@
                     photo_url: photoUrl
                 };
 
-                await saveGolfBall(ballData);
+                if (editingBallId) {
+                    // Update existing ball
+                    await updateGolfBall(editingBallId, ballData);
+                } else {
+                    // Add new ball
+                    ballData.user_id = currentUser.id;
+                    await saveGolfBall(ballData);
+                }
+                
                 closeModal();
             } catch (error) {
                 showError('Error saving golf ball: ' + error.message);
@@ -997,6 +1099,7 @@
         });
 
         function resetForm() {
+            editingBallId = null;
             document.getElementById('courseName').value = '';
             document.getElementById('location').value = '';
             document.getElementById('datePlayed').value = '';
@@ -1036,16 +1139,69 @@
             }
 
             collection.innerHTML = filtered.map(ball => `
-                <div class="ball-card">
+                <div class="ball-card" data-id="${ball.id}">
                     ${ball.photo_url ? `<img src="${ball.photo_url}" alt="${ball.course_name}" class="ball-image">` : ''}
                     <div class="ball-info">
                         <div class="ball-course">${ball.course_name}</div>
                         ${ball.location ? `<div class="ball-location">📍 ${ball.location}</div>` : ''}
                         ${ball.date_played ? `<div class="ball-date">🗓️ ${formatDate(ball.date_played)}</div>` : ''}
                         ${ball.notes ? `<div class="ball-notes">${ball.notes}</div>` : ''}
+                        <div class="ball-actions">
+                            <button class="btn-edit" onclick="editBall('${ball.id}')">✏️ Edit</button>
+                            <button class="btn-delete" onclick="confirmDelete('${ball.id}', '${ball.photo_url || ''}')">🗑️ Delete</button>
+                        </div>
                     </div>
                 </div>
             `).join('');
+        }
+
+        // Edit ball
+        window.editBall = function(id) {
+            const ball = golfBalls.find(b => b.id === id);
+            if (!ball) return;
+
+            editingBallId = id;
+            modalTitle.textContent = 'Edit Golf Ball';
+            
+            // Populate form
+            document.getElementById('courseName').value = ball.course_name || '';
+            document.getElementById('location').value = ball.location || '';
+            document.getElementById('datePlayed').value = ball.date_played || '';
+            document.getElementById('notes').value = ball.notes || '';
+            
+            // Show existing photo if available
+            if (ball.photo_url) {
+                preview.src = ball.photo_url;
+                preview.style.display = 'block';
+                cameraBtn.style.display = 'none';
+                uploadBtn.style.display = 'none';
+                retakeBtn.style.display = 'block';
+                retakeBtn.textContent = '🔄 Change Photo';
+            } else {
+                preview.style.display = 'none';
+                cameraBtn.style.display = 'block';
+                uploadBtn.style.display = 'block';
+                retakeBtn.style.display = 'none';
+            }
+            
+            currentPhoto = null; // Reset so we don't upload unless user changes photo
+            modal.classList.add('active');
+        };
+
+        // Confirm delete
+        window.confirmDelete = function(id, photoUrl) {
+            if (confirm('Are you sure you want to delete this golf ball? This cannot be undone.')) {
+                deleteBall(id, photoUrl);
+            }
+        };
+
+        // Delete ball
+        async function deleteBall(id, photoUrl) {
+            try {
+                await deleteGolfBall(id, photoUrl);
+            } catch (error) {
+                showError('Error deleting golf ball: ' + error.message);
+            }
         }
 
         searchInput.addEventListener('input', (e) => {
