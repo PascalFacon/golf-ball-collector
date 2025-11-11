@@ -36,6 +36,199 @@
             font-weight: 600;
         }
 
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 12px;
+            cursor: pointer;
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .google-btn:hover {
+            border-color: #4285f4;
+            background: #f8f9fa;
+        }
+
+        .google-btn:active {
+            transform: scale(0.98);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider::before {
+            margin-right: 12px;
+        }
+
+        .divider::after {
+            margin-left: 12px;
+        }
+
+        .email-form {
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2e7d32;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-btn:active {
+            opacity: 0.9;
+        }
+
+        .toggle-auth {
+            margin-top: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .toggle-link {
+            color: #2e7d32;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        /* Main App Styles */
         .stats {
             background: white;
             padding: 15px;
@@ -199,19 +392,6 @@
             cursor: pointer;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
-        }
-
-        .form-input,
         .form-textarea {
             width: 100%;
             padding: 12px;
@@ -219,9 +399,6 @@
             border-radius: 8px;
             font-size: 16px;
             font-family: inherit;
-        }
-
-        .form-textarea {
             min-height: 80px;
             resize: vertical;
         }
@@ -288,6 +465,11 @@
             opacity: 0.9;
         }
 
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -302,37 +484,92 @@
         .empty-state-text {
             font-size: 18px;
         }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>⛳ Golf Ball Collector</h1>
-    </div>
-
-    <div class="stats">
-        <div class="stat-item">
-            <div class="stat-number" id="totalBalls">0</div>
-            <div class="stat-label">Golf Balls</div>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="login-logo">⛳</div>
+            <h1 class="login-title">Golf Ball Collector</h1>
+            <p class="login-subtitle">Track your collection from courses around the world</p>
+            
+            <div id="errorMessage" class="error-message hidden"></div>
+            
+            <button class="google-btn" id="googleSignInBtn">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
+            </button>
+            
+            <div class="divider">or</div>
+            
+            <form id="emailAuthForm" class="email-form">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="emailInput" class="form-input" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="passwordInput" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="login-btn" id="emailAuthBtn">Sign In</button>
+            </form>
+            
+            <div class="toggle-auth">
+                <span id="authToggleText">Don't have an account?</span>
+                <span class="toggle-link" id="authToggleLink">Sign up</span>
+            </div>
         </div>
-        <div class="stat-item">
-            <div class="stat-number" id="totalCourses">0</div>
-            <div class="stat-label">Courses</div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <div class="header">
+            <h1>⛳ Golf Ball Collector</h1>
+            <div class="user-info" id="userInfo"></div>
         </div>
-    </div>
 
-    <div class="search-bar">
-        <input type="text" class="search-input" id="searchInput" placeholder="Search courses...">
-    </div>
-
-    <div class="collection" id="collection">
-        <div class="empty-state">
-            <div class="empty-state-icon">⛳</div>
-            <div class="empty-state-text">No golf balls yet<br>Tap + to add your first one!</div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalBalls">0</div>
+                <div class="stat-label">Golf Balls</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalCourses">0</div>
+                <div class="stat-label">Courses</div>
+            </div>
         </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search courses...">
+        </div>
+
+        <div class="collection" id="collection">
+            <div class="empty-state">
+                <div class="empty-state-icon">⛳</div>
+                <div class="empty-state-text">No golf balls yet<br>Tap + to add your first one!</div>
+            </div>
+        </div>
+
+        <button class="fab" id="addBtn">+</button>
     </div>
 
-    <button class="fab" id="addBtn">+</button>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading">
+        <div class="empty-state-icon">⛳</div>
+        <p>Loading...</p>
+    </div>
 
+    <!-- Add Golf Ball Modal -->
     <div class="modal" id="addModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -376,16 +613,40 @@
         </div>
     </div>
 
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script>
-        // Storage key
-        const STORAGE_KEY = 'golfBallCollection';
+        // ============================================
+        // CONFIGURATION - REPLACE WITH YOUR VALUES
+        // ============================================
+        const SUPABASE_URL = 'https://ivaggtpmfssktenwezwp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_eDqJcj7c0lSho6r9OwrCeg_Bzfbivkq';
+
+        // Initialize Supabase
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // State
+        let currentUser = null;
         let golfBalls = [];
         let currentPhoto = null;
         let stream = null;
+        let isSignUp = false;
 
         // DOM elements
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const googleSignInBtn = document.getElementById('googleSignInBtn');
+        const emailAuthForm = document.getElementById('emailAuthForm');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const emailAuthBtn = document.getElementById('emailAuthBtn');
+        const authToggleText = document.getElementById('authToggleText');
+        const authToggleLink = document.getElementById('authToggleLink');
+        const errorMessage = document.getElementById('errorMessage');
+        const userInfo = document.getElementById('userInfo');
+        
         const addBtn = document.getElementById('addBtn');
         const modal = document.getElementById('addModal');
         const closeBtn = document.getElementById('closeBtn');
@@ -401,28 +662,203 @@
         const searchInput = document.getElementById('searchInput');
         const collection = document.getElementById('collection');
 
-        // Load data
-        function loadData() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                golfBalls = JSON.parse(stored);
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
+
+        // Check authentication state on load
+        async function checkAuth() {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (user) {
+                currentUser = user;
+                showMainApp();
+            } else {
+                showLoginScreen();
             }
-            renderCollection();
         }
 
-        // Save data
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(golfBalls));
-            renderCollection();
+        // Google Sign In
+        googleSignInBtn.addEventListener('click', async () => {
+            try {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+                
+                if (error) throw error;
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Email Auth (Sign In / Sign Up)
+        emailAuthForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            try {
+                if (isSignUp) {
+                    const { error } = await supabase.auth.signUp({
+                        email,
+                        password
+                    });
+                    if (error) throw error;
+                    showError('Check your email to confirm your account!', false);
+                } else {
+                    const { error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    if (error) throw error;
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Toggle between Sign In and Sign Up
+        authToggleLink.addEventListener('click', () => {
+            isSignUp = !isSignUp;
+            if (isSignUp) {
+                emailAuthBtn.textContent = 'Sign Up';
+                authToggleText.textContent = 'Already have an account?';
+                authToggleLink.textContent = 'Sign in';
+            } else {
+                emailAuthBtn.textContent = 'Sign In';
+                authToggleText.textContent = "Don't have an account?";
+                authToggleLink.textContent = 'Sign up';
+            }
+        });
+
+        // Logout
+        async function logout() {
+            await supabase.auth.signOut();
+            showLoginScreen();
         }
 
-        // Open modal
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN') {
+                currentUser = session.user;
+                showMainApp();
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                showLoginScreen();
+            }
+        });
+
+        // ============================================
+        // UI STATE MANAGEMENT
+        // ============================================
+
+        function showLoginScreen() {
+            loginScreen.classList.remove('hidden');
+            mainApp.classList.add('hidden');
+            loadingScreen.classList.add('hidden');
+        }
+
+        function showMainApp() {
+            loginScreen.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            loadingScreen.classList.add('hidden');
+            
+            // Display user info
+            const email = currentUser.email;
+            const avatar = currentUser.user_metadata?.avatar_url;
+            
+            userInfo.innerHTML = `
+                ${avatar ? `<img src="${avatar}" class="user-avatar">` : ''}
+                <span>${email}</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            `;
+            
+            loadGolfBalls();
+        }
+
+        function showError(message, isError = true) {
+            errorMessage.textContent = message;
+            errorMessage.style.background = isError ? '#fee' : '#efe';
+            errorMessage.style.color = isError ? '#c33' : '#3c3';
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        // ============================================
+        // GOLF BALLS DATA
+        // ============================================
+
+        async function loadGolfBalls() {
+            try {
+                const { data, error } = await supabase
+                    .from('golf_balls')
+                    .select('*')
+                    .order('date_added', { ascending: false });
+                
+                if (error) throw error;
+                
+                golfBalls = data || [];
+                renderCollection();
+            } catch (error) {
+                console.error('Error loading golf balls:', error);
+                showError('Error loading your collection');
+            }
+        }
+
+        async function saveGolfBall(ballData) {
+            try {
+                const { data, error } = await supabase
+                    .from('golf_balls')
+                    .insert([ballData])
+                    .select();
+                
+                if (error) throw error;
+                
+                golfBalls.unshift(data[0]);
+                renderCollection();
+                return data[0];
+            } catch (error) {
+                console.error('Error saving golf ball:', error);
+                throw error;
+            }
+        }
+
+        async function uploadPhoto(file) {
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
+                
+                const { error: uploadError } = await supabase.storage
+                    .from('golf-ball-photos')
+                    .upload(fileName, file);
+                
+                if (uploadError) throw uploadError;
+                
+                const { data } = supabase.storage
+                    .from('golf-ball-photos')
+                    .getPublicUrl(fileName);
+                
+                return data.publicUrl;
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                throw error;
+            }
+        }
+
+        // ============================================
+        // MODAL & CAMERA
+        // ============================================
+
         addBtn.addEventListener('click', () => {
             modal.classList.add('active');
             resetForm();
         });
 
-        // Close modal
         closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
@@ -446,7 +882,7 @@
                 cameraBtn.textContent = '📸 Capture';
                 cameraBtn.onclick = capturePhoto;
             } catch (err) {
-                alert('Unable to access camera. Please check permissions.');
+                alert('Unable to access camera. Use "Choose from Camera Roll" instead.');
                 console.error('Camera error:', err);
             }
         }
@@ -465,16 +901,15 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0);
             
-            // Compress the captured photo
-            const tempDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            compressImage(tempDataUrl).then(compressed => {
-                currentPhoto = compressed;
-                preview.src = compressed;
+            canvas.toBlob((blob) => {
+                currentPhoto = blob;
+                preview.src = URL.createObjectURL(blob);
                 preview.style.display = 'block';
                 stopCamera();
                 cameraBtn.style.display = 'none';
+                uploadBtn.style.display = 'none';
                 retakeBtn.style.display = 'block';
-            });
+            }, 'image/jpeg', 0.8);
         }
 
         cameraBtn.addEventListener('click', () => {
@@ -485,50 +920,20 @@
             }
         });
 
-        // File upload button
+        // File upload
         uploadBtn.addEventListener('click', () => {
             fileInput.click();
         });
 
-        // Image compression function
-        function compressImage(dataUrl, maxWidth = 800, quality = 0.7) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
-                    }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', quality));
-                };
-                img.src = dataUrl;
-            });
-        }
-
-        // Handle file selection
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const compressed = await compressImage(event.target.result);
-                    currentPhoto = compressed;
-                    preview.src = compressed;
-                    preview.style.display = 'block';
-                    cameraBtn.style.display = 'none';
-                    uploadBtn.style.display = 'none';
-                    retakeBtn.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
+                currentPhoto = file;
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+                cameraBtn.style.display = 'none';
+                uploadBtn.style.display = 'none';
+                retakeBtn.style.display = 'block';
             }
         });
 
@@ -540,13 +945,10 @@
             cameraBtn.textContent = '📷 Take Photo';
             retakeBtn.style.display = 'none';
             fileInput.value = '';
-            cameraBtn.onclick = () => {
-                if (!stream) startCamera();
-            };
         });
 
         // Save golf ball
-        saveBtn.addEventListener('click', () => {
+        saveBtn.addEventListener('click', async () => {
             const courseName = document.getElementById('courseName').value.trim();
             
             if (!courseName) {
@@ -554,33 +956,36 @@
                 return;
             }
 
-            const newBall = {
-                id: Date.now(),
-                courseName,
-                location: document.getElementById('location').value.trim(),
-                datePlayed: document.getElementById('datePlayed').value,
-                notes: document.getElementById('notes').value.trim(),
-                photo: currentPhoto,
-                dateAdded: new Date().toISOString()
-            };
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
 
-            golfBalls.unshift(newBall);
-            
             try {
-                saveData();
+                let photoUrl = null;
+                
+                if (currentPhoto) {
+                    // Upload photo first
+                    photoUrl = await uploadPhoto(currentPhoto);
+                }
+
+                const ballData = {
+                    user_id: currentUser.id,
+                    course_name: courseName,
+                    location: document.getElementById('location').value.trim() || null,
+                    date_played: document.getElementById('datePlayed').value || null,
+                    notes: document.getElementById('notes').value.trim() || null,
+                    photo_url: photoUrl
+                };
+
+                await saveGolfBall(ballData);
                 closeModal();
             } catch (error) {
-                golfBalls.shift(); // Remove the ball we just added
-                if (error.name === 'QuotaExceededError') {
-                    alert('Storage is full! Try using a smaller photo or delete some old entries.');
-                } else {
-                    alert('Error saving: ' + error.message);
-                }
-                console.error('Save error:', error);
+                showError('Error saving golf ball: ' + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Golf Ball';
             }
         });
 
-        // Reset form
         function resetForm() {
             document.getElementById('courseName').value = '';
             document.getElementById('location').value = '';
@@ -595,16 +1000,19 @@
             fileInput.value = '';
         }
 
-        // Render collection
+        // ============================================
+        // RENDER COLLECTION
+        // ============================================
+
         function renderCollection(filter = '') {
             const filtered = golfBalls.filter(ball => 
-                ball.courseName.toLowerCase().includes(filter.toLowerCase()) ||
-                ball.location.toLowerCase().includes(filter.toLowerCase())
+                ball.course_name.toLowerCase().includes(filter.toLowerCase()) ||
+                (ball.location && ball.location.toLowerCase().includes(filter.toLowerCase()))
             );
 
             // Update stats
             document.getElementById('totalBalls').textContent = golfBalls.length;
-            const uniqueCourses = new Set(golfBalls.map(b => b.courseName));
+            const uniqueCourses = new Set(golfBalls.map(b => b.course_name));
             document.getElementById('totalCourses').textContent = uniqueCourses.size;
 
             if (filtered.length === 0) {
@@ -619,23 +1027,21 @@
 
             collection.innerHTML = filtered.map(ball => `
                 <div class="ball-card">
-                    ${ball.photo ? `<img src="${ball.photo}" alt="${ball.courseName}" class="ball-image">` : ''}
+                    ${ball.photo_url ? `<img src="${ball.photo_url}" alt="${ball.course_name}" class="ball-image">` : ''}
                     <div class="ball-info">
-                        <div class="ball-course">${ball.courseName}</div>
+                        <div class="ball-course">${ball.course_name}</div>
                         ${ball.location ? `<div class="ball-location">📍 ${ball.location}</div>` : ''}
-                        ${ball.datePlayed ? `<div class="ball-date">🗓️ ${formatDate(ball.datePlayed)}</div>` : ''}
+                        ${ball.date_played ? `<div class="ball-date">🗓️ ${formatDate(ball.date_played)}</div>` : ''}
                         ${ball.notes ? `<div class="ball-notes">${ball.notes}</div>` : ''}
                     </div>
                 </div>
             `).join('');
         }
 
-        // Search
         searchInput.addEventListener('input', (e) => {
             renderCollection(e.target.value);
         });
 
-        // Format date
         function formatDate(dateString) {
             if (!dateString) return '';
             const date = new Date(dateString + 'T00:00:00');
@@ -646,8 +1052,10 @@
             });
         }
 
-        // Initialize
-        loadData();
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        checkAuth();
     </script>
 </body>
 </html>
