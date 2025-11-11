@@ -624,7 +624,8 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_eDqJcj7c0lSho6r9OwrCeg_Bzfbivkq';
 
         // Initialize Supabase
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // State
         let currentUser = null;
@@ -668,7 +669,7 @@
 
         // Check authentication state on load
         async function checkAuth() {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabaseClient.auth.getUser();
             
             if (user) {
                 currentUser = user;
@@ -681,7 +682,7 @@
         // Google Sign In
         googleSignInBtn.addEventListener('click', async () => {
             try {
-                const { error } = await supabase.auth.signInWithOAuth({
+                const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
                         redirectTo: window.location.href
@@ -702,14 +703,14 @@
 
             try {
                 if (isSignUp) {
-                    const { error } = await supabase.auth.signUp({
+                    const { error } = await supabaseClient.auth.signUp({
                         email,
                         password
                     });
                     if (error) throw error;
                     showError('Check your email to confirm your account!', false);
                 } else {
-                    const { error } = await supabase.auth.signInWithPassword({
+                    const { error } = await supabaseClient.auth.signInWithPassword({
                         email,
                         password
                     });
@@ -736,12 +737,12 @@
 
         // Logout
         async function logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             showLoginScreen();
         }
 
         // Listen for auth changes
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN') {
                 currentUser = session.user;
                 showMainApp();
@@ -795,7 +796,7 @@
 
         async function loadGolfBalls() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('golf_balls')
                     .select('*')
                     .order('date_added', { ascending: false });
@@ -812,7 +813,7 @@
 
         async function saveGolfBall(ballData) {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('golf_balls')
                     .insert([ballData])
                     .select();
@@ -833,13 +834,13 @@
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
                 
-                const { error: uploadError } = await supabase.storage
+                const { error: uploadError } = await supabaseClient.storage
                     .from('golf-ball-photos')
                     .upload(fileName, file);
                 
                 if (uploadError) throw uploadError;
                 
-                const { data } = supabase.storage
+                const { data } = supabaseClient.storage
                     .from('golf-ball-photos')
                     .getPublicUrl(fileName);
                 
