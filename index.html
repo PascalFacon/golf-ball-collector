@@ -1365,10 +1365,11 @@
 
         async function searchGolfPlaces(query) {
             try {
-                // Use new AutocompleteSuggestion API with only valid types
+                // Don't restrict by type - search all places and filter afterward
+                // This matches the demo behavior that worked well
                 const request = {
                     input: query,
-                    includedPrimaryTypes: ['golf_course'],
+                    // No includedPrimaryTypes - search everything
                     locationBias: null
                 };
 
@@ -1377,15 +1378,42 @@
                 if (!suggestions || suggestions.length === 0) {
                     autocompleteDropdown.innerHTML = `
                         <div class="autocomplete-no-results">
-                            No golf courses found
+                            No results found
                         </div>
                     `;
                     autocompleteDropdown.classList.add('show');
                     return;
                 }
 
-                // Display results
-                autocompleteDropdown.innerHTML = suggestions.map(suggestion => {
+                // Filter to only golf-related results (like in the demo)
+                const golfSuggestions = suggestions.filter(suggestion => {
+                    const text = suggestion.placePrediction.text.text.toLowerCase();
+                    return text.includes('golf') || 
+                           text.includes('country club') ||
+                           text.includes('links') ||
+                           text.includes('cc') ||
+                           text.includes('g.c.');
+                });
+
+                if (golfSuggestions.length === 0) {
+                    // If no golf results but user typed "golf", show all results
+                    const displaySuggestions = query.toLowerCase().includes('golf') ? suggestions : golfSuggestions;
+                    
+                    if (displaySuggestions.length === 0) {
+                        autocompleteDropdown.innerHTML = `
+                            <div class="autocomplete-no-results">
+                                No golf courses found
+                            </div>
+                        `;
+                        autocompleteDropdown.classList.add('show');
+                        return;
+                    }
+                }
+
+                // Display filtered results
+                const displayList = golfSuggestions.length > 0 ? golfSuggestions : suggestions.slice(0, 5);
+                
+                autocompleteDropdown.innerHTML = displayList.map(suggestion => {
                     const placePrediction = suggestion.placePrediction;
                     return `
                         <div class="autocomplete-item" data-place-id="${placePrediction.placeId}">
