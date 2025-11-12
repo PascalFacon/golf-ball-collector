@@ -624,7 +624,7 @@
         <div class="login-box">
             <div class="login-logo">⛳</div>
             <h1 class="login-title">Golf Ball Collector</h1>
-            <p class="login-subtitle">Track your memories from courses around the world</p>
+            <p class="login-subtitle">Track your best memories from courses around the world</p>
             
             <div id="errorMessage" class="error-message hidden"></div>
             
@@ -678,7 +678,7 @@
         </div>
 
         <div class="search-bar">
-            <input type="text" class="search-input" id="searchInput" placeholder="Search courses...">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search played courses...">
         </div>
 
         <div class="collection" id="collection">
@@ -1372,22 +1372,19 @@
         }
 
         async function searchGolfPlaces(query) {
-            // Add "golf" to search if not already present
-            const searchQuery = query.toLowerCase().includes('golf') ? query : query + ' golf';
-            
             try {
-                // Use new AutocompleteSuggestion API
+                // Use new AutocompleteSuggestion API with only valid types
                 const request = {
-                    input: searchQuery,
-                    includedPrimaryTypes: ['golf_course', 'country_club'],
+                    input: query,
+                    includedPrimaryTypes: ['golf_course'],  // Only golf_course is valid
                     locationBias: null
                 };
 
                 const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
                 if (!suggestions || suggestions.length === 0) {
-                    // Fallback to text search if no suggestions
-                    fallbackTextSearch(searchQuery);
+                    // Fallback to text search
+                    fallbackTextSearch(query);
                     return;
                 }
 
@@ -1415,16 +1412,18 @@
 
                 autocompleteDropdown.classList.add('show');
             } catch (error) {
-                console.error('Autocomplete error:', error);
+                console.log('Using fallback text search');
                 // Fallback to simpler search
-                fallbackTextSearch(searchQuery);
+                fallbackTextSearch(query);
             }
         }
 
         function fallbackTextSearch(query) {
-            // Fallback using text search
+            // Add "golf" to search if not already present (works across languages)
+            const searchQuery = query.toLowerCase().includes('golf') ? query : query + ' golf';
+            
             const request = {
-                query: query,
+                query: searchQuery,
                 fields: ['name', 'formatted_address', 'place_id']
             };
 
@@ -1444,7 +1443,9 @@
                     const name = place.name.toLowerCase();
                     return name.includes('golf') || 
                            name.includes('country club') ||
-                           name.includes('links');
+                           name.includes('links') ||
+                           name.includes('cc') ||
+                           name.includes('g.c.');
                 }).slice(0, 5);
 
                 if (golfResults.length === 0) {
