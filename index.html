@@ -1311,7 +1311,6 @@
         // GOOGLE PLACES AUTOCOMPLETE (GOLF-ONLY)
         // ============================================
         
-        let placesService = null;
         let autocompleteDropdown = null;
         let debounceTimer = null;
 
@@ -1328,10 +1327,6 @@
             }
 
             try {
-                // Create a dummy div for PlacesService (required by API)
-                const dummyDiv = document.createElement('div');
-                placesService = new google.maps.places.PlacesService(dummyDiv);
-                
                 // Create custom dropdown
                 autocompleteDropdown = document.createElement('div');
                 autocompleteDropdown.className = 'autocomplete-dropdown';
@@ -1373,15 +1368,19 @@
                 // Use new AutocompleteSuggestion API with only valid types
                 const request = {
                     input: query,
-                    includedPrimaryTypes: ['golf_course'],  // Only golf_course is valid
+                    includedPrimaryTypes: ['golf_course'],
                     locationBias: null
                 };
 
                 const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
                 if (!suggestions || suggestions.length === 0) {
-                    // Fallback to text search
-                    fallbackTextSearch(query);
+                    autocompleteDropdown.innerHTML = `
+                        <div class="autocomplete-no-results">
+                            No golf courses found
+                        </div>
+                    `;
+                    autocompleteDropdown.classList.add('show');
                     return;
                 }
 
@@ -1409,86 +1408,27 @@
 
                 autocompleteDropdown.classList.add('show');
             } catch (error) {
-                console.log('Using fallback text search');
-                // Fallback to simpler search
-                fallbackTextSearch(query);
+                console.log('Autocomplete error, manual entry still available');
+                autocompleteDropdown.innerHTML = `
+                    <div class="autocomplete-no-results">
+                        Type full course name manually
+                    </div>
+                `;
+                autocompleteDropdown.classList.add('show');
             }
         }
 
-        function fallbackTextSearch(query) {
-            // Add "golf" to search if not already present (works across languages)
-            const searchQuery = query.toLowerCase().includes('golf') ? query : query + ' golf';
-            
-            const request = {
-                query: searchQuery,
-                fields: ['name', 'formatted_address', 'place_id']
-            };
-
-            placesService.textSearch(request, (results, status) => {
-                if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
-                    autocompleteDropdown.innerHTML = `
-                        <div class="autocomplete-no-results">
-                            No golf courses found
-                        </div>
-                    `;
-                    autocompleteDropdown.classList.add('show');
-                    return;
-                }
-
-                // Filter golf-related results
-                const golfResults = results.filter(place => {
-                    const name = place.name.toLowerCase();
-                    return name.includes('golf') || 
-                           name.includes('country club') ||
-                           name.includes('links') ||
-                           name.includes('cc') ||
-                           name.includes('g.c.');
-                }).slice(0, 5);
-
-                if (golfResults.length === 0) {
-                    autocompleteDropdown.innerHTML = `
-                        <div class="autocomplete-no-results">
-                            No golf courses found
-                        </div>
-                    `;
-                    autocompleteDropdown.classList.add('show');
-                    return;
-                }
-
-                autocompleteDropdown.innerHTML = golfResults.map(place => `
-                    <div class="autocomplete-item" data-place-id="${place.place_id}">
-                        <div class="autocomplete-item-main">
-                            ${place.name}
-                        </div>
-                        <div class="autocomplete-item-secondary">
-                            ${place.formatted_address || ''}
-                        </div>
-                    </div>
-                `).join('');
-
-                autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        selectPlace(item.dataset.placeId);
-                    });
-                });
-
-                autocompleteDropdown.classList.add('show');
-            });
-        }
-
         function selectPlace(placeId) {
-            const request = {
-                placeId: placeId,
-                fields: ['name', 'formatted_address', 'address_components', 'geometry']
-            };
+            // Use new Place API to get details
+            const place = new google.maps.places.Place({
+                id: placeId
+            });
 
-            placesService.getDetails(request, (place, status) => {
-                if (status !== google.maps.places.PlacesServiceStatus.OK) {
-                    return;
-                }
-
+            place.fetchFields({
+                fields: ['displayName', 'formattedAddress', 'addressComponents', 'location']
+            }).then(() => {
                 // Update course name
-                document.getElementById('courseName').value = place.name;
+                document.getElementById('courseName').value = place.displayName;
                 autocompleteDropdown.classList.remove('show');
 
                 // Extract location details
@@ -1496,16 +1436,16 @@
                 let state = '';
                 let country = '';
                 
-                if (place.address_components) {
-                    place.address_components.forEach(component => {
+                if (place.addressComponents) {
+                    place.addressComponents.forEach(component => {
                         if (component.types.includes('locality')) {
-                            city = component.long_name;
+                            city = component.longText;
                         }
                         if (component.types.includes('administrative_area_level_1')) {
-                            state = component.short_name;
+                            state = component.shortText;
                         }
                         if (component.types.includes('country')) {
-                            country = component.long_name;
+                            country = component.longText;
                         }
                     });
                 }
@@ -1516,16 +1456,18 @@
                     locationField.value = `${city}, ${state}, ${country}`;
                 } else if (city && country) {
                     locationField.value = `${city}, ${country}`;
-                } else if (place.formatted_address) {
-                    locationField.value = place.formatted_address;
+                } else if (place.formattedAddress) {
+                    locationField.value = place.formattedAddress;
                 }
+            }).catch(error => {
+                console.error('Error getting place details:', error);
             });
         }
 
         // Try to setup autocomplete when modal opens
         addBtn.addEventListener('click', () => {
             setTimeout(() => {
-                if (!placesService) {
+                if (!autocompleteDropdown) {
                     setupAutocomplete();
                 }
             }, 100);
