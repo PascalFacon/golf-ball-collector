@@ -624,7 +624,7 @@
         <div class="login-box">
             <div class="login-logo">⛳</div>
             <h1 class="login-title">Golf Ball Collector</h1>
-            <p class="login-subtitle">Track your collection from courses around the world</p>
+            <p class="login-subtitle">Track your memories from courses around the world</p>
             
             <div id="errorMessage" class="error-message hidden"></div>
             
@@ -1314,7 +1314,6 @@
         // GOOGLE PLACES AUTOCOMPLETE (GOLF-ONLY)
         // ============================================
         
-        let autocompleteService = null;
         let placesService = null;
         let autocompleteDropdown = null;
         let debounceTimer = null;
@@ -1334,8 +1333,6 @@
             try {
                 // Create a dummy div for PlacesService (required by API)
                 const dummyDiv = document.createElement('div');
-                
-                autocompleteService = new google.maps.places.AutocompleteService();
                 placesService = new google.maps.places.PlacesService(dummyDiv);
                 
                 // Create custom dropdown
@@ -1374,30 +1371,65 @@
             }
         }
 
-        function searchGolfPlaces(query) {
+        async function searchGolfPlaces(query) {
             // Add "golf" to search if not already present
             const searchQuery = query.toLowerCase().includes('golf') ? query : query + ' golf';
             
-            const request = {
-                input: searchQuery,
-                types: ['establishment']
-            };
+            try {
+                // Use new AutocompleteSuggestion API
+                const request = {
+                    input: searchQuery,
+                    includedPrimaryTypes: ['golf_course', 'country_club'],
+                    locationBias: null
+                };
 
-            autocompleteService.getPlacePredictions(request, (predictions, status) => {
-                if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
-                    autocompleteDropdown.classList.remove('show');
+                const { suggestions } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+
+                if (!suggestions || suggestions.length === 0) {
+                    // Fallback to text search if no suggestions
+                    fallbackTextSearch(searchQuery);
                     return;
                 }
 
-                // Filter to only golf-related results
-                const golfPredictions = predictions.filter(prediction => {
-                    const description = prediction.description.toLowerCase();
-                    return description.includes('golf') || 
-                           description.includes('country club') ||
-                           description.includes('links');
+                // Display results
+                autocompleteDropdown.innerHTML = suggestions.map(suggestion => {
+                    const placePrediction = suggestion.placePrediction;
+                    return `
+                        <div class="autocomplete-item" data-place-id="${placePrediction.placeId}">
+                            <div class="autocomplete-item-main">
+                                ${placePrediction.text.text}
+                            </div>
+                            <div class="autocomplete-item-secondary">
+                                ${placePrediction.structuredFormat?.secondaryText?.text || ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Add click handlers
+                autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selectPlace(item.dataset.placeId);
+                    });
                 });
 
-                if (golfPredictions.length === 0) {
+                autocompleteDropdown.classList.add('show');
+            } catch (error) {
+                console.error('Autocomplete error:', error);
+                // Fallback to simpler search
+                fallbackTextSearch(searchQuery);
+            }
+        }
+
+        function fallbackTextSearch(query) {
+            // Fallback using text search
+            const request = {
+                query: query,
+                fields: ['name', 'formatted_address', 'place_id']
+            };
+
+            placesService.textSearch(request, (results, status) => {
+                if (status !== google.maps.places.PlacesServiceStatus.OK || !results) {
                     autocompleteDropdown.innerHTML = `
                         <div class="autocomplete-no-results">
                             No golf courses found
@@ -1407,19 +1439,35 @@
                     return;
                 }
 
-                // Display filtered results
-                autocompleteDropdown.innerHTML = golfPredictions.map(prediction => `
-                    <div class="autocomplete-item" data-place-id="${prediction.place_id}">
+                // Filter golf-related results
+                const golfResults = results.filter(place => {
+                    const name = place.name.toLowerCase();
+                    return name.includes('golf') || 
+                           name.includes('country club') ||
+                           name.includes('links');
+                }).slice(0, 5);
+
+                if (golfResults.length === 0) {
+                    autocompleteDropdown.innerHTML = `
+                        <div class="autocomplete-no-results">
+                            No golf courses found
+                        </div>
+                    `;
+                    autocompleteDropdown.classList.add('show');
+                    return;
+                }
+
+                autocompleteDropdown.innerHTML = golfResults.map(place => `
+                    <div class="autocomplete-item" data-place-id="${place.place_id}">
                         <div class="autocomplete-item-main">
-                            ${prediction.structured_formatting.main_text}
+                            ${place.name}
                         </div>
                         <div class="autocomplete-item-secondary">
-                            ${prediction.structured_formatting.secondary_text || ''}
+                            ${place.formatted_address || ''}
                         </div>
                     </div>
                 `).join('');
 
-                // Add click handlers
                 autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
                     item.addEventListener('click', () => {
                         selectPlace(item.dataset.placeId);
@@ -1479,7 +1527,7 @@
         // Try to setup autocomplete when modal opens
         addBtn.addEventListener('click', () => {
             setTimeout(() => {
-                if (!autocompleteService) {
+                if (!placesService) {
                     setupAutocomplete();
                 }
             }, 100);
